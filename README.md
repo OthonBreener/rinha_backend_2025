@@ -9,11 +9,18 @@ Backend para intermediar pagamentos com Payment Processor e Payment Fallback.
 - Banco PostgreSQL para persistência
 - Redis para cache
 
+Projeto consiste em uma aplicação FastAPI que recebe solicitações de pagamento e os envia para um processador.
+Esse processador disponibiliza um endpoint para informar qual o status dos processadores (default e fallback), para tal,
+existe um serviço de cache que fica atualizado com as informações do processador. A api /payments dispobilizada pelo backend, 
+envia as solicitações para um worker (P2P com redis) que consulta no redis qual o processador disponivel e envia a
+solicitação para ele, em caso de sucesso, salva o pagamento no banco de dados (postgres).
+
+![rinha.jpg](rinha.jpg)
+
 ## Endpoints
 
 - `POST /payments`: intermedia pagamento
 - `GET /payments-summary`: resumo de pagamentos processados
-- `GET /payments/service-health`: health check com rate limit (1 req/5s)
 
 ## Tecnologias
 
