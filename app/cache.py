@@ -15,13 +15,15 @@ async def salvar_disponibilidade() -> None:
         limits=HTTP_LIMITS,
         timeout=HTTP_TIMEOUT,
     ) as cliente:
-        response_default = await cliente.get(
-            "http://payment-processor-default:8080/payments/service-health",
-            timeout=5.0
-        )
-        response_fallback = await cliente.get(
-            "http://payment-processor-fallback:8080/payments/service-health",
-            timeout=5.0
+        response_default, response_fallback = await asyncio.gather(
+            cliente.get(
+                "http://payment-processor-default:8080/payments/service-health",
+                timeout=5.0
+            ),
+            cliente.get(
+                "http://payment-processor-fallback:8080/payments/service-health",
+                timeout=5.0
+            )
         )
 
     if response_default.status_code == 200 and response_fallback.status_code == 200:
@@ -33,6 +35,12 @@ async def salvar_disponibilidade() -> None:
 
         elif resposta_default.get('minResponseTime') < 120:
             processador_disponivel = 'default'
+
+        elif resposta_default.get('minResponseTime') > 120 and resposta_fallback.get('minResponseTime') > 120:
+            if resposta_default.get('minResponseTime') < resposta_fallback.get('minResponseTime'):
+                processador_disponivel = 'default'
+            else:
+                processador_disponivel = 'fallback'
 
         elif not resposta_fallback.get('failing'):
             processador_disponivel = 'fallback'
